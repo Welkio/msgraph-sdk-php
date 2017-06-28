@@ -11,7 +11,6 @@ class SharepointTest extends TestCase
     {
         $graphTestBase = new GraphTestBase();
         $this->_client = $graphTestBase->graphClient;
-        $this->_client->setApiVersion("stagingv1.0");
     }
 
     /**
@@ -20,6 +19,7 @@ class SharepointTest extends TestCase
 	public function testAccessRootSite()
     {
         $files = $this->_client->createRequest("GET", "/sites/root/drive/root/children")
+            ->setApiVersion("stagingv1.0")
             ->setReturnType(Model\DriveItem::class)
             ->execute();
 

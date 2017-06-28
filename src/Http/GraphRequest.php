@@ -32,24 +32,6 @@ use Microsoft\Graph\Exception\GraphException;
 class GraphRequest
 {
     /**
-    * A valid access token
-    *
-    * @var string
-    */
-    protected $accessToken;
-    /**
-    * The API version to use ("v1.0", "beta")
-    *
-    * @var string
-    */
-    protected $apiVersion;
-    /**
-    * The base url to call
-    *
-    * @var string
-    */
-    protected $baseUrl;
-    /**
     * The endpoint to call
     *
     * @var string
@@ -60,7 +42,7 @@ class GraphRequest
     *
     * @var Client
     */
-    protected $guzzleClient;
+    protected $client;
     /**
     * An array of headers to send with the request
     *
@@ -98,32 +80,30 @@ class GraphRequest
     * @var string
     */
     protected $timeout;
+    /**
+    * The api version to use ("v1.0", "beta")
+    * Default is "v1.0"
+    *
+    * @var string
+    */
+    private $apiVersion;
 
     /**
     * Constructs a new Graph Request object
     *
-    * @param string $requestType The HTTP method to use, e.g. "GET" or "POST"
-    * @param string $endpoint    The Graph endpoint to call
-    * @param string $accessToken A valid access token to validate the Graph call
-    * @param string $baseUrl     The base URL to call
-    * @param string $apiVersion  The API version to use
+    * @param string            $requestType The HTTP method to use, e.g. "GET" or "POST"
+    * @param string            $endpoint    The Graph endpoint to call
+    * @param GuzzleHttp\Client $client      The guzzle client
      *
      * @throws GraphException when no access token is provided
     */ 
-    public function __construct($requestType, $endpoint, $accessToken, $baseUrl, $apiVersion)
+    public function __construct($requestType, $endpoint, $client)
     {
         $this->requestType = $requestType;
         $this->endpoint = $endpoint;
-        $this->accessToken = $accessToken;
-
-        if (!$this->accessToken) {
-            throw new GraphException(GraphConstants::NO_ACCESS_TOKEN);
-        }
-
-        $this->baseUrl = $baseUrl;
-        $this->apiVersion = $apiVersion;
+        $this->client = $client;
         $this->timeout = 0;
-        $this->headers = $this->_getDefaultHeaders();
+        $this->apiVersion = GraphConstants::API_VERSION;
     }
 
     /**
@@ -145,6 +125,19 @@ class GraphRequest
     }
 
     /**
+    * Sets the API version to use, e.g. "beta" (defaults to v1.0)
+    *
+    * @param string $apiVersion The API version to use
+    *
+    * @return Graph object
+    */
+    public function setApiVersion($apiVersion)
+    {
+        $this->apiVersion = $apiVersion;
+        return $this;
+    }
+
+    /**
     * Adds custom headers to the request
     *
     * @param array $headers An array of custom headers
@@ -155,16 +148,6 @@ class GraphRequest
     {
         $this->headers = array_merge($this->headers, $headers);
         return $this;
-    }
-
-    /**
-    * Get the request headers
-    *
-    * @return array of headers
-    */
-    public function getHeaders()
-    {
-        return $this->headers;
     }
 
     /**
@@ -199,6 +182,16 @@ class GraphRequest
     }
 
     /**
+    * Get the request headers
+    *
+    * @return array of headers
+    */
+    public function getHeaders()
+    {
+        return $this->headers;
+    }
+
+    /**
     * Sets the timeout limit of the cURL request
     *
     * @param string $timeout The timeout in ms
@@ -224,7 +217,7 @@ class GraphRequest
     public function execute($client = null)
     {
         if (is_null($client)) {
-            $client = $this->createGuzzleClient();
+            $client = $this->client;
         }
 
         $result = $client->request(
@@ -233,7 +226,8 @@ class GraphRequest
             [
                 'body' => $this->requestBody,
                 'stream' =>  $this->returnsStream,
-                'timeout' => $this->timeout
+                'timeout' => $this->timeout,
+                'headers' => $this->getHeaders(),
             ]
         );
 
@@ -265,7 +259,7 @@ class GraphRequest
     public function executeAsync($client = null)
     {
         if (is_null($client)) {
-            $client = $this->createGuzzleClient();
+            $client = $this->client;
         }
 
         $promise = $client->requestAsync(
@@ -274,7 +268,8 @@ class GraphRequest
             [
                 'body' => $this->requestBody,
                 'stream' => $this->returnsStream,
-                'timeout' => $this->timeout
+                'timeout' => $this->timeout,
+                'headers' => $this->getHeaders(),
             ]
         )->then(
             // On success, return the result/response
@@ -315,7 +310,7 @@ class GraphRequest
     public function download($path, $client = null)
     {
         if (is_null($client)) {
-            $client = $this->createGuzzleClient();
+            $client = $this->client;
         }
         try {
             if (file_exists($path) && is_writeable($path)) {
@@ -326,7 +321,8 @@ class GraphRequest
                     $this->_getRequestUrl(), 
                     [
                         'body' => $this->requestBody,
-                        'sink' => $file
+                        'sink' => $file,
+                        'headers' => $this->getHeaders(),
                     ]
                 );
                 fclose($file);
@@ -353,7 +349,7 @@ class GraphRequest
     public function upload($path, $client = null)
     {
         if (is_null($client)) {
-            $client = $this->createGuzzleClient();
+            $client = $this->client;
         }
         try {
             if (file_exists($path) && is_readable($path)) {
@@ -367,22 +363,6 @@ class GraphRequest
         } catch(GraphException $e) {
             throw new GraphException(GraphConstants::INVALID_FILE);
         }
-    }
-
-    /**
-    * Get a list of headers for the request
-    *
-    * @return array The headers for the request
-    */
-    private function _getDefaultHeaders()
-    {
-        $headers = [
-            'Host' => $this->baseUrl,
-            'Content-Type' => 'application/json',
-            'SdkVersion' => 'Graph-php-' . GraphConstants::SDK_VERSION,
-            'Authorization' => 'Bearer ' . $this->accessToken
-        ];
-        return $headers;
     }
 
     /**
@@ -412,25 +392,5 @@ class GraphRequest
             return "?";
         }
         return "&";
-    }
-
-    /**
-    * Create a new Guzzle client
-    * To allow for user flexibility, the 
-    * client is not reused. This allows the user
-    * to set and change headers on a per-request
-    * basis
-    *
-    * @return \GuzzleHttp\Client The new client
-    */
-    protected function createGuzzleClient()
-    {
-        $client = new Client(
-            [
-                'base_uri' => $this->baseUrl,
-                'headers' => $this->headers
-            ]
-        );
-        return $client;
     }
 }

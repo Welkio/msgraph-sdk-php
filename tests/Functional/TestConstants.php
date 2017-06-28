@@ -13,7 +13,7 @@ class TestConstants
     * it is best to use a test account for these if 
     * possible.
     */
-    const CLIENT_ID = "CLIENT_ID";
-    const USERNAME = "USERNAME";
-    const PASSWORD = "USER_PASSWORD";
+    const CLIENT_ID = "9754c359-a243-4307-b175-e54a71b23cd1";
+    const USERNAME = "dj@flipbat.com";
+    const PASSWORD = "sD(X4U2EaW?qyqKs";
 }

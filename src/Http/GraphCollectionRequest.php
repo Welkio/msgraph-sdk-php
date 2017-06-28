@@ -53,35 +53,13 @@ class GraphCollectionRequest extends GraphRequest
     *
     * @var bool
     */
-    protected $end;
+    protected $end = false;
     /**
     * The endpoint that the user called (with query parameters)
     *
     * @var string
     */
     protected $originalEndpoint;
-
-    /**
-    * Constructs a new GraphCollectionRequest object
-    *
-    * @param string $requestType The HTTP verb for the 
-    *                            request ("GET", "POST", "PUT", etc.)
-    * @param string $endpoint    The URI of the endpoint to hit
-    * @param string $accessToken A valid access token
-    * @param string $baseUrl     The base URL of the request
-    * @param string $apiVersion  The version of the API to call
-    */
-    public function __construct($requestType, $endpoint, $accessToken, $baseUrl, $apiVersion)
-    {
-        parent::__construct(
-            $requestType, 
-            $endpoint, 
-            $accessToken, 
-            $baseUrl, 
-            $apiVersion
-        );
-        $this->end = false;
-    }
 
     /**
     * Gets the number of entries in the collection

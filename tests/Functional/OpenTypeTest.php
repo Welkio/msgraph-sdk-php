@@ -20,8 +20,8 @@ class OpenTypeTest extends TestCase
     {
     	$extension = new Model\Extension(array("theme" => "dark", "extensionName" => "Extension 1"));
 
-    	$this->_client->setApiVersion("beta");
     	$eResult = $this->_client->createRequest("POST", "/me/extensions")
+            ->setApiVersion("beta")
     		->attachBody($extension)
     		->setReturnType(Model\Extension::class)
     		->execute();

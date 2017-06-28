@@ -18,8 +18,8 @@ class DeltaQueryTest extends TestCase
     */
 	public function testDeltaQuery()
     {
-        $this->_client->setApiVersion("beta");
         $deltaPageRequest = $this->_client->createCollectionRequest("GET", "/groups/delta")
+            ->setApiVersion("beta")
             ->setReturnType(Model\Group::class);
         while (!$deltaPageRequest->isEnd()) {
             $groups = $deltaPageRequest->getPage();

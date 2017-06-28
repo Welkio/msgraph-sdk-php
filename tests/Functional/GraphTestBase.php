@@ -49,6 +49,10 @@ class GraphTestBase
 		curl_setopt($ch, CURLOPT_HTTPHEADER, array($this->contentType, 'Content-Length: ' . strlen($body)));
 
 		$result = curl_exec ($ch);
+
+		// var_dump($result);
+		// die();
+
 		$token = json_decode($result, true)['access_token'];
 		curl_close($ch);
 

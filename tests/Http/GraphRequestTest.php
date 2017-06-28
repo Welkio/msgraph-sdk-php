@@ -12,12 +12,6 @@ class GraphRequestTest extends TestCase
 
     public function setUp()
     {
-        $this->requests = array(
-            new GraphRequest("GET", "/endpoint", "token", "baseUrl", "/version"),
-            new GraphRequest("PATCH", "/endpoint?query", "token", "baseUrl", "/version"),
-            new GraphRequest("GET", "/endpoint?query&query2", "token", "baseUrl", "/version")
-        );
-
         $this->defaultHeaders = array(
             "Host" => "baseUrl",
             "Content-Type" => "application/json",
@@ -32,7 +26,16 @@ class GraphRequestTest extends TestCase
             new GuzzleHttp\Psr7\Response(200, ['foo' => 'bar'], $body)
         ]);
         $handler = GuzzleHttp\HandlerStack::create($mock);
-        $this->client = new GuzzleHttp\Client(['handler' => $handler]);
+        $this->client = new GuzzleHttp\Client([
+            'handler' => $handler,
+            'headers' => $this->defaultHeaders,
+        ]);
+
+        $this->requests = array(
+            new GraphRequest("GET", "/endpoint", $this->client),
+            new GraphRequest("PATCH", "/endpoint?query", $this->client),
+            new GraphRequest("GET", "/endpoint?query&query2", $this->client),
+        );
     }
 
     public function testSetReturnType()
@@ -42,15 +45,13 @@ class GraphRequestTest extends TestCase
         $reflectionMethod->setAccessible(true);
 
         $graph = new Graph();
-        $graph->setApiVersion('/beta');
         $graph->setAccessToken('token');
-        $request = $graph->createRequest("get", "/me");
-        $graph->setApiVersion('/v1.0');
 
+        $request = $graph->createRequest("get", "/me")->setApiVersion('/beta');
         $requestUrl = $reflectionMethod->invokeArgs($request, array());
         $this->assertEquals($requestUrl, "/beta/me");
 
-        $request2 = $graph->createRequest("get", "/me");
+        $request2 = $graph->createRequest("get", "/me")->setApiVersion('/v1.0');
         $requestUrl = $reflectionMethod->invokeArgs($request2, array());
         $this->assertEquals("/v1.0/me", $requestUrl);
     }
@@ -123,18 +124,6 @@ class GraphRequestTest extends TestCase
     {
         $this->requests[0]->setTimeout('200');
         $this->assertAttributeEquals('200', 'timeout', $this->requests[0]);
-    }
-
-    public function testCreateGuzzleClient()
-    {
-        $reflectionMethod = new ReflectionMethod('Microsoft\Graph\Http\GraphRequest', 'createGuzzleClient');
-        $reflectionMethod->setAccessible(true);
-
-        $request = $this->requests[0];
-        $client = $reflectionMethod->invokeArgs($request, array());
-
-        $this->assertInstanceOf(GuzzleHttp\Client::class, $client);
-
     }
 
     public function testExecute()

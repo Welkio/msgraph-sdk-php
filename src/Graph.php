@@ -20,6 +20,7 @@ namespace Microsoft\Graph;
 use Microsoft\Graph\Core\GraphConstants;
 use Microsoft\Graph\Http\GraphCollectionRequest;
 use Microsoft\Graph\Http\GraphRequest;
+use GuzzleHttp\Client;
 
 /**
  * Class Graph
@@ -39,26 +40,25 @@ class Graph
     */
     private $_accessToken;
     /**
-    * The api version to use ("v1.0", "beta")
-    * Default is "v1.0"
-    *
-    * @var string
-    */
-    private $_apiVersion;
-    /**
     * The base url to call
     * Default is "https://graph.microsoft.com"
     *
     * @var string
     */
     private $_baseUrl;
+    /**
+    * The base url to call
+    * Default is "https://graph.microsoft.com"
+    *
+    * @var string
+    */
+    private $_client;
 
     /**
     * Creates a new Graph object, which is used to call the Graph API
     */
     public function __construct()
     {
-        $this->_apiVersion = GraphConstants::API_VERSION;
         $this->_baseUrl = GraphConstants::REST_ENDPOINT;
     }
 
@@ -72,19 +72,6 @@ class Graph
     public function setBaseUrl($baseUrl)
     {
         $this->_baseUrl = $baseUrl;
-        return $this;
-    }
-
-    /**
-    * Sets the API version to use, e.g. "beta" (defaults to v1.0)
-    *
-    * @param string $apiVersion The API version to use
-    *
-    * @return Graph object
-    */
-    public function setApiVersion($apiVersion)
-    {
-        $this->_apiVersion = $apiVersion;
         return $this;
     }
 
@@ -104,6 +91,19 @@ class Graph
     }
 
     /**
+    * Sets the default guzzle client.
+    *
+    * @param GuzzleHttp\Client $client The guzzle client
+    *
+    * @return Graph object
+    */
+    public function setClient($client)
+    {
+        $this->_client = $client;
+        return $this;
+    }
+
+    /**
     * Creates a new request object with the given Graph information
     *
     * @param string $requestType The HTTP method to use, e.g. "GET" or "POST"
@@ -115,11 +115,9 @@ class Graph
     public function createRequest($requestType, $endpoint)
     {
         return new GraphRequest(
-            $requestType, 
-            $endpoint, 
-            $this->_accessToken, 
-            $this->_baseUrl, 
-            $this->_apiVersion
+            $requestType,
+            $endpoint,
+            $this->getGuzzleClient()
         );
     }
 
@@ -138,9 +136,50 @@ class Graph
         return new GraphCollectionRequest(
             $requestType, 
             $endpoint, 
-            $this->_accessToken, 
-            $this->_baseUrl, 
-            $this->_apiVersion
+            $this->getGuzzleClient()
+        );
+    }
+
+    /**
+    * Get a list of headers for the request
+    *
+    * @return array The headers for the request
+    */
+    private function _getDefaultHeaders()
+    {
+        return [
+            'Host' => $this->_baseUrl,
+            'Content-Type' => 'application/json',
+            'SdkVersion' => 'Graph-php-' . GraphConstants::SDK_VERSION,
+            'Authorization' => 'Bearer ' . $this->_accessToken
+        ];
+    }
+
+    protected function getGuzzleClient()
+    {
+        if (! $this->_client) {
+            $this->_client = $this->createGuzzleClient();
+        }
+
+        return $this->_client;
+    }
+
+    /**
+    * Create a new Guzzle client
+    * To allow for user flexibility, the 
+    * client is not reused. This allows the user
+    * to set and change headers on a per-request
+    * basis
+    *
+    * @return \GuzzleHttp\Client The new client
+    */
+    protected function createGuzzleClient()
+    {
+        return new Client(
+            [
+                'base_uri' => $this->_baseUrl,
+                'headers' => $this->_getDefaultHeaders(),
+            ]
         );
     }
 }

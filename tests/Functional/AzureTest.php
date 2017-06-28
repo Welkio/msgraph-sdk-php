@@ -11,7 +11,6 @@ class AzureTest extends TestCase
     {
         $graphTestBase = new GraphTestBase();
         $this->_client = $graphTestBase->graphClient;
-        $this->_client->setApiVersion("beta");
     }
 
     /**
@@ -20,6 +19,7 @@ class AzureTest extends TestCase
 	public function testAdminUnits()
     {
         $adminUnits = $this->_client->createRequest("GET", "/administrativeUnits")
+            ->setApiVersion("beta")
             ->setReturnType(Model\AdministrativeUnit::class)
             ->execute();
 

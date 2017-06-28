@@ -16,13 +16,13 @@ class PlannerTest extends TestCase
     {
         $graphTestBase = new GraphTestBase();
         $this->_client = $graphTestBase->graphClient;
-        $this->_client->setApiVersion("stagingbeta");
 
         $bucket = new Model\PlannerBucket();
         $bucket->setName("Test Bucket");
         $bucket->setPlanId($this->planId);
 
         $this->planBucket = $this->_client->createRequest("POST", "/planner/buckets")
+            ->setApiVersion("stagingbeta")
             ->attachBody($bucket)
             ->setReturnType(Model\PlannerBucket::class)
             ->execute();

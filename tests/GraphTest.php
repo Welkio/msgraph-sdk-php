@@ -51,26 +51,9 @@ class GraphTest extends TestCase
     public function testBetaRequest()
     {
         $graph = new Graph();
-        $graph->setAccessToken('abc')
-              ->setApiVersion('/beta');
-        $request = $graph->createRequest("GET", "/me");
+        $graph->setAccessToken('abc');
+        $request = $graph->createRequest("GET", "/me")->setApiVersion('/beta');
 
         $this->assertEquals('/beta', $this->readAttribute($request, 'apiVersion'));
-    }
-
-    public function testMultipleGraphObjects()
-    {
-        $graph = new Graph();
-        $graph2 = new Graph();
-
-        $graph->setAccessToken('abc');
-        $graph2->setAccessToken('abc');
-        $graph2->setApiVersion('/beta');
-
-        $request = $graph->createRequest("GET", "/me");
-        $request2 = $graph2->createRequest("GET", "/me");
-
-        $this->assertEquals(GraphConstants::API_VERSION, $this->readAttribute($request, 'apiVersion'));
-        $this->assertEquals('/beta', $this->readAttribute($request2, 'apiVersion'));
     }
 }
