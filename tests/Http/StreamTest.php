@@ -41,7 +41,7 @@ class StreamTest extends TestCase
         $this->root->addChild($file);
         $file->setContent('data');
 
-        $request = new GraphRequest("GET", "/me", "token", "url", "/v1.0");
+        $request = new GraphRequest("GET", "/me", $this->client);
         $request->upload($file->url(), $this->client);
 
         $this->assertEquals($this->container[0]['request']->getBody()->getContents(), $file->getContent());
@@ -54,13 +54,13 @@ class StreamTest extends TestCase
         $file = new VfsStreamFile('foo.txt', 0000);
         $this->root->addChild($file);
 
-        $request = new GraphRequest("GET", "/me", "token", "url", "/v1.0");
+        $request = new GraphRequest("GET", "/me", $this->client);
         $request->upload($file->url(), $this->client);
     }
 
     public function testDownload()
     {
-        $request = new GraphRequest("GET", "/me", "token", "url", "/v1.0");
+        $request = new GraphRequest("GET", "/me", $this->client);
         $file = new VfsStreamFile('foo.txt');
         $this->root->addChild($file);
 
@@ -75,13 +75,13 @@ class StreamTest extends TestCase
         $file = new VfsStreamFile('foo.txt', 0000);
         $this->root->addChild($file);
 
-        $request = new GraphRequest("GET", "/me", "token", "url", "/v1.0");
+        $request = new GraphRequest("GET", "/me", $this->client);
         $request->download($file->url(), $this->client);
     }
 
     public function testSetReturnStream()
     {
-        $request = new GraphRequest("GET", "/me", "token", "url", "/v1.0");
+        $request = new GraphRequest("GET", "/me", $this->client);
         $request->setReturnType(GuzzleHttp\Psr7\Stream::class);
 
         $this->assertAttributeEquals(true, 'returnsStream', $request);

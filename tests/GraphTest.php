@@ -16,7 +16,7 @@ class GraphTest extends TestCase
     {
         $this->expectException(Microsoft\Graph\Exception\GraphException::class);
         $graph = new Graph();
-        $request = $graph->createRequest("GET", "/me");
+        $graph->createRequest("GET", "/me");
     }
 
     public function testInitializeGraphWithToken()
@@ -44,8 +44,8 @@ class GraphTest extends TestCase
         $graph->setBaseUrl('url2');
 
         $request = $graph->createRequest("GET", "/me");
-        $requestUrl = $this->readAttribute($request, 'baseUrl');
-        $this->assertEquals('url2', $requestUrl);
+        $client = $this->readAttribute($request, 'client');
+        $this->assertEquals('url2', (string)$client->getConfig('base_uri'));
     }
 
     public function testBetaRequest()

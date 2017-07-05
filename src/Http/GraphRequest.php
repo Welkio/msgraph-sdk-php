@@ -48,7 +48,7 @@ class GraphRequest
     *
     * @var array(string => string)
     */
-    protected $headers;
+    protected $headers = [];
     /**
     * The body of the request (optional)
     *
@@ -86,7 +86,7 @@ class GraphRequest
     *
     * @var string
     */
-    private $apiVersion;
+    protected $apiVersion;
 
     /**
     * Constructs a new Graph Request object
@@ -188,7 +188,7 @@ class GraphRequest
     */
     public function getHeaders()
     {
-        return $this->headers;
+        return array_merge($this->client->getConfig('headers'), $this->headers);
     }
 
     /**

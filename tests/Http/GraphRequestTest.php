@@ -70,7 +70,7 @@ class GraphRequestTest extends TestCase
             "test" => "header"
         );
 
-        $this->assertEquals($expectedHeaders, $headers);
+        $this->assertArraySubset($expectedHeaders, $headers);
     }
 
     public function testCustomHeadersOverwriteDefaults()
@@ -86,14 +86,14 @@ class GraphRequestTest extends TestCase
             "Authorization" => "Bearer token"
         );
 
-        $this->assertEquals($expectedHeaders, $headers);
+        $this->assertArraySubset($expectedHeaders, $headers);
     }
 
     public function testDefaultHeaders()
     {
         $headers = $this->requests[0]->getHeaders();
 
-        $this->assertEquals($this->defaultHeaders, $headers);
+        $this->assertArraySubset($this->defaultHeaders, $headers);
     }
 
     public function testGetBody()
@@ -170,7 +170,7 @@ class GraphRequestTest extends TestCase
         $reflectionMethod->setAccessible(true);
 
         $requestUrl = $reflectionMethod->invokeArgs($this->requests[0], array());
-        $this->assertEquals($requestUrl, "/version/endpoint");
+        $this->assertEquals("v1.0/endpoint", $requestUrl);
     }
 
     public function testGetConcatenator()

@@ -11,10 +11,6 @@ class GraphCollectionRequestTest extends TestCase
 
     public function setUp()
     {
-        $this->collectionRequest = new GraphCollectionRequest("GET", "/endpoint", "token", "url", "/version");
-        $this->collectionRequest->setReturnType(Model\User::class);
-        $this->collectionRequest->setPageSize(2);
-
         $body = json_encode(array('body' => 'content', '@odata.nextLink' => 'url/version/endpoint?skiptoken=link'));
         $body2 = json_encode(array('body' => 'content'));
         $mock = new GuzzleHttp\Handler\MockHandler([
@@ -24,6 +20,10 @@ class GraphCollectionRequestTest extends TestCase
         ]);
         $handler = GuzzleHttp\HandlerStack::create($mock);
         $this->client = new GuzzleHttp\Client(['handler' => $handler]);
+
+        $this->collectionRequest = new GraphCollectionRequest("GET", "/endpoint", $this->client);
+        $this->collectionRequest->setReturnType(Model\User::class);
+        $this->collectionRequest->setPageSize(2);
 
         $this->reflectedRequestUrlHandler = new ReflectionMethod('Microsoft\Graph\Http\GraphRequest', '_getRequestUrl');
         $this->reflectedRequestUrlHandler->setAccessible(true);
@@ -64,11 +64,11 @@ class GraphCollectionRequestTest extends TestCase
 
         $requestUrl = $this->reflectedRequestUrlHandler->invokeArgs($this->collectionRequest, array());
 
-        $this->assertEquals($requestUrl, '/version/endpoint');
+        $this->assertEquals('v1.0/endpoint', $requestUrl);
 
         $this->collectionRequest->setPageCallInfo();
 
         $requestUrl = $this->reflectedRequestUrlHandler->invokeArgs($this->collectionRequest, array());
-        $this->assertEquals('/version/endpoint?$top=2', $requestUrl);
+        $this->assertEquals('v1.0/endpoint?$top=2', $requestUrl);
     }
 }

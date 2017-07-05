@@ -18,6 +18,7 @@
 namespace Microsoft\Graph;
 
 use Microsoft\Graph\Core\GraphConstants;
+use Microsoft\Graph\Exception\GraphException;
 use Microsoft\Graph\Http\GraphCollectionRequest;
 use Microsoft\Graph\Http\GraphRequest;
 use GuzzleHttp\Client;
@@ -165,16 +166,21 @@ class Graph
     }
 
     /**
-    * Create a new Guzzle client
-    * To allow for user flexibility, the 
-    * client is not reused. This allows the user
-    * to set and change headers on a per-request
-    * basis
-    *
-    * @return \GuzzleHttp\Client The new client
-    */
+     * Create a new Guzzle client
+     * To allow for user flexibility, the
+     * client is not reused. This allows the user
+     * to set and changeø headers on a per-request
+     * basis
+     *
+     * @return \GuzzleHttp\Client The new client
+     * @throws \Microsoft\Graph\Exception\GraphException
+     */
     protected function createGuzzleClient()
     {
+        if (!$this->_accessToken) {
+            throw new GraphException(GraphConstants::NO_ACCESS_TOKEN);
+        }
+
         return new Client(
             [
                 'base_uri' => $this->_baseUrl,
